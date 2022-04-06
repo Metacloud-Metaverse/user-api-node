@@ -1,6 +1,5 @@
 const env = require('dotenv').config()
 const express = require('express')
-const jwt = require('jsonwebtoken')
 const ApiRoutes = require('./routes/app.ts')
 
 const port = Number(process.env.PORT || 3001)
