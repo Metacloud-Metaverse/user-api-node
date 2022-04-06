@@ -1,42 +1,24 @@
 const dbs = require('../models/index.js');
-
 const userModel = dbs.User;
-const ApiResponseHandlers = require('../helper/ApiResponse.ts')
-let isError = false;
-
-
+const jwt = require('jsonwebtoken')
+const apiResponseHandler = require('../helper/ApiResponse.ts')
 
 class UserController {
-    static async test(req, res, next) {
-        try {
-            const data = "test user API";
-            const message = "user test API is Working";
-            ApiResponseHandlers.send(req, res, "DATA", data, message)
-        } catch (error) {
-            next(error);
-        }
-    }
-    
+   
     static async generateGuest(req, res, next) {
         try {
         const dateToHex = Date.now().toString(16);
         const guest_private_secret = "AC_"+ dateToHex;
-        console.log(guest_private_secret)
         const data = {
             guest_private_secret: guest_private_secret,
         }
-        await userModel.create(data, "Guest User created successfully"); 
-        let user = function (guest_private_secret) {
-            return userModel.findOne({ where: { guest_private_secret: guest_private_secret } })
-        }
-        let userResult = user(guest_private_secret)
-        userResult.then(async function (result) {
-            if (!result) {
+            await userModel.create(data, "Guest User created successfully"); 
+            let isUserExist = await UserController.userExist(guest_private_secret)
+            if (!isUserExist) {
                 const err = "error";
-                isError = true
-                ApiResponseHandler.sendError(req, res, "userList", err, "There is some error Generating a Guest user Please try Again");
+                apiResponseHandler.sendError(req, res, "user", err, "There is some error Generating a Guest user Please try Again");
             }else{
-                const username = "user_" + (result.id += 1000);
+                const username = "user_" + (isUserExist.id += 1000);
                 console.log(username)
                 console.log(guest_private_secret)
                 let user = function (username) {
@@ -44,22 +26,48 @@ class UserController {
                 }
                 let userUpdate = user(username)
                 userUpdate.then(async function (result){
-                    console.log(result)
+                console.log(result)
                 })
                 const data= {
-                    id: result.id,
+                    id: isUserExist.id,
                     username: username,
                     guest_private_secret: guest_private_secret
                 }
-                ApiResponseHandlers.send(req, res, "user", data, "Guest-user created successfully")
+                apiResponseHandler.send(req, res, "user", data, "Guest-user created successfully")
             }
-        })
-    
      } catch(error) {
         next(error);
     }
     
 }
+    static async loginGuest(req, res, next) {
+        try {
+            //authenticate User
+            let user_id = req.body.user_id;
+            let guest_private_secret = req.body.guest_private_secret;
+            let isUserExist = await UserController.userExist(guest_private_secret)
+            if (!isUserExist) {
+                const err = "error";
+                apiResponseHandler.sendError(req, res, "guest_login", err, "No user exist with given user guest_privat_key");
+            } else {
+                if (user_id !== isUserExist.dataValues.id){
+                    const err = "error";
+                    apiResponseHandler.sendError(req, res, "guest_login", err, "user_id and guest_privat_key doesn't match");
+                }
+                const accessToken = jwt.sign(
+                    { user_id: user_id, guest_private_secret },
+                    process.env.ACCESS_TOKEN_SECRET,
+                    {
+                        expiresIn: "8h",
+                    }
+                );
+             apiResponseHandler.send(req, res, "access_token", { token_type: "bearer", access_token: accessToken }, "Guest Login JWT access token generated successfully")
+            }
+            
+            } catch (error) {
+                next(error)
+            }
+    }
     static async userList(req, res, next) {
     try {
         //get users form list
@@ -70,15 +78,22 @@ class UserController {
         let users = userList()
         users.then(function (result) {
             if (Array.isArray(result) && result.length) {
-                ApiResponseHandlers.send(req, res, "userList", result, "List all user data successfully")
+                apiResponseHandler.send(req, res, "userList", result, "List all user data successfully")
             } else {
-                ApiResponseHandlers.send(req, res, "userList", result, "No Data found ")
+                apiResponseHandler.send(req, res, "userList", result, "No Data found ")
             }
         })
     }
     catch (error) {
         next(error)
     }
+    }
+    static async userExist(guest_private_secret) {
+        return userModel.findOne({ where: { guest_private_secret: guest_private_secret } })
+    }
+
+    static async authenticateToken(req, res, next) {
+        apiResponseHandler.send(req, res, "jwt-auth", "Authentication", "Welcome 🙌 ");
     }
 }
 module.exports = UserController;
