@@ -16,7 +16,7 @@ class UserController {
             let isUserExist = await UserController.userExist(guest_private_secret)
             if (!isUserExist) {
                 const err = "error";
-                apiResponseHandler.sendError(req, res, "user", err, "There is some error Generating a Guest user Please try Again");
+                apiResponseHandler.sendError(req, res, "data", err, "There is some error Generating a Guest user Please try Again");
             }else{
                 const username = "user_" + (isUserExist.id += 1000);
                 console.log(username)
@@ -33,7 +33,7 @@ class UserController {
                     username: username,
                     guest_private_secret: guest_private_secret
                 }
-                apiResponseHandler.send(req, res, "user", data, "Guest-user created successfully")
+                apiResponseHandler.send(req, res, "data", data, "Guest-user created successfully")
             }
      } catch(error) {
         next(error);
@@ -48,11 +48,11 @@ class UserController {
             let isUserExist = await UserController.userExist(guest_private_secret)
             if (!isUserExist) {
                 const err = "error";
-                apiResponseHandler.sendError(req, res, "guest_login", err, "No user exist with given user guest_privat_key");
+                apiResponseHandler.sendError(req, res, "data", err, "No user exist with given user guest_privat_key");
             } else {
                 if (user_id !== isUserExist.dataValues.id){
                     const err = "error";
-                    apiResponseHandler.sendError(req, res, "guest_login", err, "user_id and guest_privat_key doesn't match");
+                    apiResponseHandler.sendError(req, res, "data", err, "user_id and guest_privat_key doesn't match");
                 }
                 const accessToken = jwt.sign(
                     { user_id: user_id, guest_private_secret },
@@ -61,7 +61,7 @@ class UserController {
                         expiresIn: "8h",
                     }
                 );
-             apiResponseHandler.send(req, res, "access_token", { token_type: "bearer", access_token: accessToken }, "Guest Login JWT access token generated successfully")
+             apiResponseHandler.send(req, res, "data", { token_type: "bearer", access_token: accessToken }, "Guest Login JWT access token generated successfully")
             }
             
             } catch (error) {
@@ -78,14 +78,14 @@ class UserController {
         let users = userList()
         users.then(function (result) {
             if (Array.isArray(result) && result.length) {
-                apiResponseHandler.send(req, res, "userList", result, "List all user data successfully")
+                apiResponseHandler.send(req, res, "data", result, "List all user data successfully")
             } else {
-                apiResponseHandler.send(req, res, "userList", result, "No Data found ")
+                apiResponseHandler.send(req, res, "data", result, "No Data found ")
             }
         })
     }
     catch (error) {
-        next(error)
+        // next(error)
     }
     }
     static async userExist(guest_private_secret) {
@@ -93,7 +93,8 @@ class UserController {
     }
 
     static async authenticateToken(req, res, next) {
-        apiResponseHandler.send(req, res, "jwt-auth", "Authentication", "Welcome 🙌 ");
+        let data = req.user
+        apiResponseHandler.send(req, res, "data", data, "Welcome 🙌 ");
     }
 }
 module.exports = UserController;

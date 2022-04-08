@@ -7,7 +7,7 @@ class HomeController {
         try {
             const data = "test user API";
             const message = "user test API is Working";
-            ApiResponseHandler.send(req, res, "DATA", data, message)
+            ApiResponseHandler.send(req, res, "data", data, message)
         } catch (error) {
             next(error);
         }
@@ -16,7 +16,7 @@ class HomeController {
         console.log(db.sequelize.config)
         const data = db.sequelize.config
         const message = "Database connection is done";
-        ApiResponseHandler.send(req, res, "DATA", data, message)
+        ApiResponseHandler.send(req, res, "data", data, message)
     }
 }
 
