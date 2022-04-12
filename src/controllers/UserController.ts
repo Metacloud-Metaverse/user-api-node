@@ -1,6 +1,6 @@
 const dbs = require('../models/index.js');
 const userModel = dbs.User;
-const jwt = require('jsonwebtoken')
+const Jwt = require("jsonwebtoken");
 const apiResponseHandler = require('../helper/ApiResponse.ts')
 
 class UserController {
@@ -54,7 +54,7 @@ class UserController {
                     const err = "error";
                     apiResponseHandler.sendError(req, res, "data", err, "user_id and guest_privat_key doesn't match");
                 }
-                const accessToken = jwt.sign(
+                const accessToken = Jwt.sign(
                     { user_id: user_id, guest_private_secret },
                     process.env.ACCESS_TOKEN_SECRET,
                     {
@@ -90,11 +90,6 @@ class UserController {
     }
     static async userExist(guest_private_secret) {
         return userModel.findOne({ where: { guest_private_secret: guest_private_secret } })
-    }
-
-    static async authenticateToken(req, res, next) {
-        let data = req.user
-        apiResponseHandler.send(req, res, "data", data, "Welcome 🙌 ");
     }
 }
 module.exports = UserController;
