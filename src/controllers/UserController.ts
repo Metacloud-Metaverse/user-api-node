@@ -15,12 +15,9 @@ class UserController {
             await userModel.create(data, "Guest User created successfully"); 
             let isUserExist = await UserController.userExist(guest_private_secret)
             if (!isUserExist) {
-                const err = "error";
-                apiResponseHandler.sendError(req, res, "data", err, "There is some error Generating a Guest user Please try Again");
-            }else{
+                apiResponseHandler.sendError(req, res, "data", null, "There is some error Generating a Guest user Please try Again");
+            } else {
                 const username = "user_" + (isUserExist.id += 1000);
-                console.log(username)
-                console.log(guest_private_secret)
                 let user = function (username) {
                     return userModel.update({ username: username }, { where: { guest_private_secret: guest_private_secret } });
                 }
@@ -47,12 +44,10 @@ class UserController {
             let guest_private_secret = req.body.guest_private_secret;
             let isUserExist = await UserController.userExist(guest_private_secret)
             if (!isUserExist) {
-                const err = "error";
-                apiResponseHandler.sendError(req, res, "data", err, "No user exist with given user guest_privat_key");
+                apiResponseHandler.sendError(req, res, "data", null, "No user exist with given user guest_privat_key");
             } else {
                 if (user_id !== isUserExist.dataValues.id){
-                    const err = "error";
-                    apiResponseHandler.sendError(req, res, "data", err, "user_id and guest_privat_key doesn't match");
+                    apiResponseHandler.sendError(req, res, "data", null, "user_id and guest_privat_key doesn't match");
                 }
                 const accessToken = Jwt.sign(
                     { user_id: user_id, guest_private_secret },
@@ -80,7 +75,7 @@ class UserController {
             if (Array.isArray(result) && result.length) {
                 apiResponseHandler.send(req, res, "data", result, "List all user data successfully")
             } else {
-                apiResponseHandler.send(req, res, "data", result, "No Data found ")
+                apiResponseHandler.send(req, res, "data", null, "No Data found ")
             }
         })
     }
