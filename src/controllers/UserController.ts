@@ -1,11 +1,11 @@
 const dbs = require('../models/index.js');
 const userModel = dbs.User;
-const Jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 const apiResponseHandler = require('../helper/ApiResponse.ts')
 
 class UserController {
    
-    static async generateGuest(req, res, next) {
+    static async generateGuest(req: any, res: any, next: any) {
         try {
         const dateToHex = Date.now().toString(16);
         const guest_private_secret = "AC_"+ dateToHex;
@@ -18,11 +18,11 @@ class UserController {
                 apiResponseHandler.sendError(req, res, "data", null, "There is some error Generating a Guest user Please try Again");
             } else {
                 const username = "user_" + (isUserExist.id += 1000);
-                let user = function (username) {
+                let user = function (username: any) {
                     return userModel.update({ username: username }, { where: { guest_private_secret: guest_private_secret } });
                 }
                 let userUpdate = user(username)
-                userUpdate.then(async function (result){
+                userUpdate.then(async function (result: any){
                 console.log(result)
                 })
                 const data= {
@@ -37,7 +37,7 @@ class UserController {
     }
     
 }
-    static async loginGuest(req, res, next) {
+    static async loginGuest(req: any, res: any, next: any) {
         try {
             //authenticate User
             let user_id = req.body.user_id;
@@ -49,7 +49,7 @@ class UserController {
                 if (user_id !== isUserExist.dataValues.id){
                     apiResponseHandler.sendError(req, res, "data", null, "user_id and guest_privat_key doesn't match");
                 }
-                const accessToken = Jwt.sign(
+                const accessToken = jwt.sign(
                     { user_id: user_id, guest_private_secret },
                     process.env.ACCESS_TOKEN_SECRET,
                     {
@@ -63,7 +63,7 @@ class UserController {
                 next(error)
             }
     }
-    static async userList(req, res, next) {
+    static async userList(req: any, res: any, next: any) {
     try {
         //get users form list
         const data = req.body;
@@ -71,7 +71,7 @@ class UserController {
             return userModel.findAll()
         }
         let users = userList()
-        users.then(function (result) {
+        users.then(function (result: any) {
             if (Array.isArray(result) && result.length) {
                 apiResponseHandler.send(req, res, "data", result, "List all user data successfully")
             } else {
@@ -83,7 +83,7 @@ class UserController {
         // next(error)
     }
     }
-    static async userExist(guest_private_secret) {
+    static async userExist(guest_private_secret: string) {
         return userModel.findOne({ where: { guest_private_secret: guest_private_secret } })
     }
 }

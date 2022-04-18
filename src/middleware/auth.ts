@@ -3,7 +3,7 @@ const ApiResponseHandler = require('../helper/ApiResponse.ts')
 
 const config = process.env;
 
-const verifyToken = (req, res, next) => {
+const verifyToken = (req: any, res: any, next: any) => {
     const bearerHeader = req.headers["authorization"];
     if (!bearerHeader) {
         const err = "error";
