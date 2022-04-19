@@ -5,7 +5,7 @@ const apiResponseHandler = require('../helper/ApiResponse.ts')
 
 class UserController {
    
-    static async generateGuest(req: any, res: any, next: any) {
+    static async generateGuest(req, res, next) {
         try {
         const dateToHex = Date.now().toString(16);
         const guest_private_secret = "AC_"+ dateToHex;
@@ -18,11 +18,11 @@ class UserController {
                 apiResponseHandler.sendError(req, res, "data", null, "There is some error Generating a Guest user Please try Again");
             } else {
                 const username = "user_" + (isUserExist.id += 1000);
-                let user = function (username: any) {
+                let user = function (username) {
                     return userModel.update({ username: username }, { where: { guest_private_secret: guest_private_secret } });
                 }
                 let userUpdate = user(username)
-                userUpdate.then(async function (result: any){
+                userUpdate.then(async function (result){
                 console.log(result)
                 })
                 const data= {
@@ -37,7 +37,7 @@ class UserController {
     }
     
 }
-    static async loginGuest(req: any, res: any, next: any) {
+    static async loginGuest(req, res, next) {
         try {
             //authenticate User
             let user_id = req.body.user_id;
@@ -63,7 +63,7 @@ class UserController {
                 next(error)
             }
     }
-    static async userList(req: any, res: any, next: any) {
+    static async userList(req, res, next) {
     try {
         //get users form list
         const data = req.body;
@@ -71,7 +71,7 @@ class UserController {
             return userModel.findAll()
         }
         let users = userList()
-        users.then(function (result: any) {
+        users.then(function (result) {
             if (Array.isArray(result) && result.length) {
                 apiResponseHandler.send(req, res, "data", result, "List all user data successfully")
             } else {
@@ -83,7 +83,7 @@ class UserController {
         // next(error)
     }
     }
-    static async userExist(guest_private_secret: string) {
+    static async userExist(guest_private_secret) {
         return userModel.findOne({ where: { guest_private_secret: guest_private_secret } })
     }
 }
