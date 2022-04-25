@@ -83,6 +83,16 @@ class UserController {
         // next(error)
     }
     }
+    static async saveProfile(req, res, next){
+        try {
+            //save user extra information
+            const data = req.body          
+            await userModel.update(data, { where: { id: req.user.user_id } });
+            apiResponseHandler.send(req, res, "data", data, "User Profile saved successfully")
+        } catch (error) {
+            apiResponseHandler.sendError(req, res, "data", null, "Error saving user profile. Please try again with correct data.");
+        }
+    }
     static async userExist(guest_private_secret) {
         return userModel.findOne({ where: { guest_private_secret: guest_private_secret } })
     }
