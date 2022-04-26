@@ -1,5 +1,7 @@
 const dbs = require('../models/index.js');
 const userModel = dbs.User;
+const Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 const jwt = require("jsonwebtoken");
 const apiResponseHandler = require('../helper/ApiResponse.ts')
 
@@ -58,7 +60,6 @@ class UserController {
                 );
              apiResponseHandler.send(req, res, "data", { token_type: "bearer", access_token: accessToken }, "Guest Login JWT access token generated successfully")
             }
-            
             } catch (error) {
                 next(error)
             }
@@ -86,15 +87,47 @@ class UserController {
     static async saveProfile(req, res, next){
         try {
             //save user extra information
-            const data = req.body          
-            await userModel.update(data, { where: { id: req.user.user_id } });
-            apiResponseHandler.send(req, res, "data", data, "User Profile saved successfully")
+            const data = req.body
+            if (data.email && data.username) {
+                const validateEmail = (email) => {
+                    return email.match(
+                        /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+                    );
+                };
+                const validateUsername = (username) => {
+                    return username.match(/^[A-Za-z][\w_]{5,14}$/);
+                };
+                if (!validateEmail(data.email)) {
+                    const message = "Email address is not valid";
+                    apiResponseHandler.sendError(req, res, "data", null, message)
+                } else if (!validateUsername(data.username)) {
+                    const message = "Username is not valid, Only Uppercase [A-Z], Lowercase [a-z], Numbers[0-9], Underscore [_] are allowed and must start with letter. Length must be min 6 and max 15";
+                    apiResponseHandler.sendError(req, res, "data", null, message)
+                } else {
+                    let isUsernameExist = await UserController.usernameExist(data.username, req.user.user_id)
+                    let isEmailExist = await UserController.emailExist(data.email, req.user.user_id)
+                    if(isUsernameExist){
+                        apiResponseHandler.sendError(req, res, "data", null, "This username is alredy taken. Please try again with some other username");
+                    }else if (isEmailExist) {
+                        apiResponseHandler.sendError(req, res, "data", null, "This email is already registered");
+                    } else {
+                    await userModel.update(data, { where: { id: req.user.user_id } });
+                    apiResponseHandler.send(req, res, "data", data, "User Profile saved successfully")
+                    }
+                }
+            }
         } catch (error) {
             apiResponseHandler.sendError(req, res, "data", null, "Error saving user profile. Please try again with correct data.");
         }
     }
     static async userExist(guest_private_secret) {
         return userModel.findOne({ where: { guest_private_secret: guest_private_secret } })
+    }
+    static async usernameExist(username, id) {
+        return userModel.findOne({ where: {[Op.and]: [ { username: username }, { id: { [Op.not]: id} }] }})
+    }
+    static async emailExist(email, id) {
+        return userModel.findOne({ where: { [Op.and]: [{ email: email },  { id: { [Op.not]: id} }] } })
     }
 }
 module.exports = UserController;
