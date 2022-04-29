@@ -8,8 +8,8 @@ const app = express()
 
 app.use(compression())
 app.use(express.json())
-app.use('/api', ApiRoutes)
+app.use('/', ApiRoutes)
 
-    app.listen(port, () =>
+app.listen(port, () =>
     console.log(`Listening on http://localhost:${port}`)
 );
