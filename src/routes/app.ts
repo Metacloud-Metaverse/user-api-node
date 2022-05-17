@@ -10,5 +10,6 @@ router.get('/user/list', userController.userList)
 router.post('/user/login-guest', userController.loginGuest)
 router.post('/user/save-profile', auth, userController.saveProfile)
 router.post('/user/save-setting', auth, userSettingController.saveUserSetting)
+router.get('/user/fetch-setting', auth, userSettingController.fetchUserSetting)
 
 module.exports = router;
