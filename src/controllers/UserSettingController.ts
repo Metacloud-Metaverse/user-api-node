@@ -7,7 +7,6 @@ class UserSettingController {
     try {
       const data = req.body
       data.user_id = req.user.user_id
-      console.log(data)
       if (await UserSettingController.checkValidation(req, res, data)) {
         await userSettingModel.create(data)
         apiResponseHandler.send(req, res, "data", data, "User settings saved successfully")
@@ -19,15 +18,21 @@ class UserSettingController {
   static async fetchUserSetting(req, res, next) {
     try {
       const user_id = req.user.user_id
-      const data = await userSettingModel.findOne({ where: { user_id: user_id } })
-      apiResponseHandler.send(req, res, "data", data, "Product fetched successfully")
+      let isUserSettingExist = await UserSettingController.userSettingExist(user_id)
+      if (!isUserSettingExist) {
+        const message = "User setting not available with given id"
+        apiResponseHandler.sendError(req, res, "data", null, message)
+      } else {
+      const data = isUserSettingExist
+      apiResponseHandler.send(req, res, "data", data, "User setting fetched successfully")
+      }
     } catch (error) {
-      const message = "Error fetching product, Please try again with correct data"
+      const message = "Error fetching user setting, Please try again with correct data"
       apiResponseHandler.sendError(req, res, "data", null, message)
     }
   }
   static async checkValidation(req, res, data) {
-    if (data.player_name_opacity  === null || data.player_name_opacity  === "" || (data.player_name_opacity  && (data.player_name_opacity  > 1 || isNaN(data.player_name_opacity )))) {
+    if (data.player_name_opacity === null || data.player_name_opacity === "" || (data.player_name_opacity && (data.player_name_opacity > 1 || isNaN(data.player_name_opacity)))) {
       const message = "player_name_opacity value is not valid. Value should be between 0 to 1"
       apiResponseHandler.sendError(req, res, "data", null, message)
     } else if (data.scene_load_radius === null || data.scene_load_radius === "" || (data.scene_load_radius && (data.scene_load_radius > 1 || isNaN(data.scene_load_radius)))) {
@@ -42,7 +47,7 @@ class UserSettingController {
     } else if (data.volume_music === null || data.volume_music === "" || (data.volume_music && (data.volume_music > 1 || isNaN(data.volume_music)))) {
       const message = "volume_music value is not valid. Value should be between 0 to 1"
       apiResponseHandler.sendError(req, res, "data", null, message)
-    } else if (data.show_avatar_name === null || data.show_avatar_name === "" || (data.show_avatar_name &&  typeof  data.show_avatar_name !== "boolean")) {
+    } else if (data.show_avatar_name === null || data.show_avatar_name === "" || (data.show_avatar_name && typeof data.show_avatar_name !== "boolean")) {
       const message = "show_avatar_name value is not valid. Value should be boolean either true or false"
       apiResponseHandler.sendError(req, res, "data", null, message)
     } else if (data.hide_ui === null || data.hide_ui === "" || (data.hide_ui && typeof data.hide_ui !== "boolean")) {
@@ -84,9 +89,13 @@ class UserSettingController {
     } else if (data.allow_voice_chat === null || data.allow_voice_chat === "" || (data.allow_voice_chat && isNaN(data.allow_voice_chat))) {
       const message = "allow_voice_chat value is not valid. Value should be integer, and not empty or null"
       apiResponseHandler.sendError(req, res, "data", null, message)
-    }else{
+    } else {
       return true
     }
+  }
+
+  static async userSettingExist(user_id){
+    return userSettingModel.findOne({ where: { user_id: user_id } })
   }
 }
 
