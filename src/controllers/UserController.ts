@@ -66,7 +66,7 @@ class UserController {
         try {
             let walletAddress = req.body.address;
             let guestPrivateSecret = '';
-            let isUserExist = await UserController.getUserByWalletAddress(walletAddress);
+            var isUserExist = await UserController.getUserByWalletAddress(walletAddress);
             if(!isUserExist){
                 const dateToHex = Date.now().toString(16);
                 guestPrivateSecret = "AC_" + dateToHex;
@@ -74,7 +74,7 @@ class UserController {
                     wallet_address: walletAddress,
                     guest_private_secret: guestPrivateSecret,
                 }
-                await userModel.create(data, "Guest User created successfully");
+                isUserExist = await userModel.create(data, "Guest User created successfully");
             } else {
                 guestPrivateSecret = isUserExist.guest_private_secret;
             }
