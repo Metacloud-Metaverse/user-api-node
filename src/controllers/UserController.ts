@@ -1,10 +1,11 @@
+import {encrypt, recoverPersonalSignature } from '@metamask/eth-sig-util';
+
 const dbs = require('../models/index.js');
 const userModel = dbs.User;
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const jwt = require("jsonwebtoken");
 const apiResponseHandler = require('../helper/ApiResponse.ts')
-
 class UserController {
     static async generateGuest(req, res, next) {
         try {
@@ -88,6 +89,40 @@ class UserController {
 
         } catch (error) {
             next(error);
+        }
+    }
+    static async verifySigned(req, res, next){
+        try {
+            let walletAddress = req.body.address;
+            let signature = req.body.signature;
+            let isUserExist = await UserController.getUserByWalletAddress(walletAddress);
+            if(!isUserExist){
+                return apiResponseHandler.sendError(req, res, "data", null, "No user exist with address");
+            }
+
+            let nonce = isUserExist.guest_private_secret;
+            // Recover the address of the account used to create the given Ethereum signature.
+            const nonceToHex = `0x${Buffer.from(nonce, 'utf8').toString('hex')}`;
+            const recoveredAddress = recoverPersonalSignature({
+                data: nonceToHex,
+                signature: signature,
+            });
+
+            // See if that matches the address the user is claiming the signature is from
+            if (recoveredAddress !== walletAddress) {
+                return apiResponseHandler.sendError(req, res, "data", null, "No user exist with address");
+            }
+
+            const accessToken = jwt.sign(
+                { user_id: isUserExist.id, nonce },
+                process.env.ACCESS_TOKEN_SECRET,
+                {
+                    expiresIn: "8h",
+                }
+            );
+            apiResponseHandler.send(req, res, "data", { token_type: "bearer", access_token: accessToken }, "Guest Login JWT access token generated successfully")
+        } catch (error) {
+            next(error)
         }
     }
     static async userList(req, res, next) {
