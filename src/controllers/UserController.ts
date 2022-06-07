@@ -62,6 +62,34 @@ class UserController {
             next(error)
         }
     }
+    static async getNonceToSign(req, res, next) {
+        try {
+            let walletAddress = req.body.address;
+            let guestPrivateSecret = '';
+            let isUserExist = await UserController.getUserByWalletAddress(walletAddress);
+            if(!isUserExist){
+                const dateToHex = Date.now().toString(16);
+                guestPrivateSecret = "AC_" + dateToHex;
+                const data = {
+                    wallet_address: walletAddress,
+                    guest_private_secret: guestPrivateSecret,
+                }
+                await userModel.create(data, "Guest User created successfully");
+            } else {
+                guestPrivateSecret = isUserExist.guest_private_secret;
+            }
+
+            const data = {
+                id: isUserExist.id,
+                address: walletAddress,
+                guest_private_secret: guestPrivateSecret
+            }
+            apiResponseHandler.send(req, res, "data", data, "Guest-user created successfully")
+
+        } catch (error) {
+            next(error);
+        }
+    }
     static async userList(req, res, next) {
         try {
             //get users form list
@@ -122,6 +150,9 @@ class UserController {
     }
     static async userExist(guest_private_secret) {
         return userModel.findOne({ where: { guest_private_secret: guest_private_secret } })
+    }
+    static async getUserByWalletAddress(address) {
+        return userModel.findOne({ where: { wallet_address: address } })
     }
     static async usernameExist(username, id) {
         return userModel.findOne({ where: { [Op.and]: [{ username: username }, { id: { [Op.not]: id } }] } })
