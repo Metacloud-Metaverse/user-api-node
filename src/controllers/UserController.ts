@@ -68,8 +68,7 @@ class UserController {
             let guestPrivateSecret = '';
             var isUserExist = await UserController.getUserByWalletAddress(walletAddress);
             if(!isUserExist){
-                const dateToHex = Date.now().toString(16);
-                guestPrivateSecret = "AC_" + dateToHex;
+                guestPrivateSecret = Math.floor(Math.random() * 1000000).toString();;
                 const data = {
                     wallet_address: walletAddress,
                     guest_private_secret: guestPrivateSecret,
