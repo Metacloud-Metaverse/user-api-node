@@ -109,7 +109,7 @@ class UserController {
 
             // See if that matches the address the user is claiming the signature is from
             if (recoveredAddress !== walletAddress) {
-                return apiResponseHandler.sendError(req, res, "data", null, "No user exist with address");
+                return apiResponseHandler.sendError(req, res, "data", { test: recoveredAddress }, "Signature incorrect");
             }
 
             const accessToken = jwt.sign(
