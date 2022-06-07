@@ -64,7 +64,7 @@ class UserController {
     }
     static async getNonceToSign(req, res, next) {
         try {
-            let walletAddress = req.body.address;
+            let walletAddress = req.body.address.toUpperCase();
             let guestPrivateSecret = '';
             var isUserExist = await UserController.getUserByWalletAddress(walletAddress);
             if(!isUserExist){
@@ -92,7 +92,7 @@ class UserController {
     }
     static async verifySigned(req, res, next){
         try {
-            let walletAddress = req.body.address;
+            let walletAddress = req.body.address.toUpperCase();
             let signature = req.body.signature;
             let isUserExist = await UserController.getUserByWalletAddress(walletAddress);
             if(!isUserExist){
@@ -108,7 +108,7 @@ class UserController {
             });
 
             // See if that matches the address the user is claiming the signature is from
-            if (recoveredAddress !== walletAddress) {
+            if (recoveredAddress.toUpperCase() !== walletAddress) {
                 return apiResponseHandler.sendError(req, res, "data", { test: recoveredAddress }, "Signature incorrect");
             }
 
