@@ -1,5 +1,4 @@
-import {encrypt, recoverPersonalSignature } from '@metamask/eth-sig-util';
-
+const ethSigUtil = require('@metamask/eth-sig-util');
 const dbs = require('../models/index.js');
 const userModel = dbs.User;
 const Sequelize = require('sequelize');
@@ -103,7 +102,7 @@ class UserController {
             let nonce = isUserExist.guest_private_secret;
             // Recover the address of the account used to create the given Ethereum signature.
             const nonceToHex = `0x${Buffer.from(nonce, 'utf8').toString('hex')}`;
-            const recoveredAddress = recoverPersonalSignature({
+            const recoveredAddress = ethSigUtil.recoverPersonalSignature({
                 data: nonceToHex,
                 signature: signature,
             });
